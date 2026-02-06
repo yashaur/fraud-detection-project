@@ -1,7 +1,7 @@
 import joblib
 import lightgbm
 import time
-from utils.data import load_preprocess
+# from utils.data import load_preprocess
 
 def load_model():
     start = time.time()
