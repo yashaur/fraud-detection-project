@@ -5,3 +5,6 @@ fraud/
 work.ipynb
 datasets/X_test.csv
 datasets/y_test.csv
+*.pyc
+*.DS_Store
+data/y_test.csv
