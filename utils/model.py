@@ -1,7 +1,6 @@
 import joblib
 import lightgbm
 import time
-# from utils.data import load_preprocess
 
 def load_model():
     start = time.time()
@@ -21,10 +20,11 @@ def predict(model, X):
 if __name__ == '__main__':
 
     import numpy as np
+    from utils.data import load_preprocess
 
-    model = load_model('model/lgbm.pkl')
+    model = load_model()
 
-    X, y = load_preprocess('data/')
+    X, y = load_preprocess()
 
     y_preds = predict(model, X)
 

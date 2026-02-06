@@ -1,6 +1,8 @@
 import numpy as np
-# from utils.data import load_preprocess
-# from utils.model import load_model, predict
+
+if __name__ == '__main__':
+   from utils.data import load_preprocess
+   from utils.model import load_model, predict
 
 def precision_recall(y_probs, y_test, thresh: float = 0.5):
    
@@ -30,10 +32,6 @@ def precision_recall(y_probs, y_test, thresh: float = 0.5):
 
 
 def precision_recall_array(X, y, model, y_probs):
-
-   # X, y = load_preprocess()
-   # model = load_model()
-   # y_probs = predict(model, X)
    
    pr_data = []
    
@@ -52,14 +50,13 @@ if __name__ == '__main__':
    
    X, y = load_preprocess()
    model = load_model()
-
    y_probs = predict(model, X)
 
    precision, recall = precision_recall(y_probs, y, thresh = 1)
 
    print(f'Precision: {precision*100:.2f}%\nRecall: {recall*100:.2f}%')
 
-   pr_data = precision_recall_array()
+   pr_data = precision_recall_array(X, y, model, y_probs)
 
    print(pr_data[:])
 

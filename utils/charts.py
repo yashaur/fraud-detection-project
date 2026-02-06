@@ -1,6 +1,9 @@
 import matplotlib.pyplot as plt
 import numpy as np
-# from utils.precision_recall import precision_recall_array
+
+if __name__ == '__main__':
+    from utils.precision_recall import precision_recall_array
+
 
 def create_pr_doughnuts(precision, recall):
 
@@ -21,7 +24,8 @@ def create_pr_doughnuts(precision, recall):
 
 def create_pr_chart(pr_data, precision, recall):
 
-    # pr_data = precision_recall_array()
+    if __name__ == '__main__':
+        pr_data = precision_recall_array()
 
     fig, ax = plt.subplots(figsize = (10,4))
 
