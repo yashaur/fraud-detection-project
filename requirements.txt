@@ -1,5 +1,6 @@
 numpy==2.4.2
-streamlit
+pandas
+streamlit==1.54.0
 joblib
 lightgbm
 scikit-learn==1.6.1
