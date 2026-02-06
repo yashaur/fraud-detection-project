@@ -1,11 +1,11 @@
 import joblib
 import lightgbm
 import time
-from utils.preprocess import load_preprocess
+from utils.data import load_preprocess
 
-def load_model(model_path):
+def load_model():
     start = time.time()
-    model = joblib.load(model_path)
+    model = joblib.load('model/lgbm.pkl')
     duration = time.time() - start
     print(f'Model took {duration:.2f}s to load')
     return model

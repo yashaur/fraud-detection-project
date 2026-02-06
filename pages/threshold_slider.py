@@ -1,50 +1,54 @@
-from utils.preprocess import load_preprocess
-from utils.lgbm import load_model, predict
-from utils.precision_recall import precision_recall
+# IMPORTING LIBRARIES
+from utils.data import load_preprocess
+from utils.model import load_model, predict
+from utils.precision_recall import precision_recall, precision_recall_array
+from utils.charts import create_pr_doughnuts, create_pr_chart
 import streamlit as st
 import matplotlib.pyplot as plt
 
-data_path = 'data/'
 
+### INITIALISING SESSION STATE VARIABLES ###
+
+# Initialising X and y
 if 'X' not in st.session_state or 'y' not in st.session_state:
-   st.session_state['X'], st.session_state['y'] = load_preprocess(data_path)
-
+    st.session_state['X'], st.session_state['y'] = load_preprocess()
 X, y = st.session_state['X'], st.session_state['y']
 
+# Initiliasing the model
 if 'model' not in st.session_state:
-    st.session_state['model'] = load_model('model/lgbm.pkl')
-
+    st.session_state['model'] = load_model()
 model = st.session_state['model']
 
+# Initialising predicted probabilities
 if 'y_probs' not in st.session_state:
-   st.session_state['y_probs'] = predict(model, X)
-
+    st.session_state['y_probs'] = predict(model, X)
 y_probs = st.session_state['y_probs']
 
+# Initialising the threshold
 if 'threshold' not in st.session_state:
-   threshold = 0.5
+    threshold = 0.5
 else:
-   threshold = st.session_state['threshold']
+    threshold = st.session_state['threshold'] / 100
 
-precision, recall = precision_recall(thresh = threshold, y_probs = y_probs, y_test = y)
+# Initialising the precision-recall array at different thresholds
+if 'pr_data' not in st.session_state:
+    st.session_state['pr_data'] = precision_recall_array(X, y, model, y_probs)
+pr_data = st.session_state['pr_data']
 
+
+### STREAMLIT PAGE CODE ###
+
+# Title of the page
 st.title("Threshold Slider")
 
-fig, ax = plt.subplots(1,2)
+# Creating the precision and recall doughnut charts
+precision, recall = precision_recall(thresh = threshold, y_probs = y_probs, y_test = y)
+doughnuts = create_pr_doughnuts(precision, recall)
+st.pyplot(doughnuts)
 
-colours = ['lightblue', 'blue']
+# Creating the precision-recall tradeoff plot
+pr_chart = create_pr_chart(pr_data, precision, recall)
+st.pyplot(pr_chart)
 
-ax[0].pie(([1 - precision, precision]), startangle=90, wedgeprops=dict(width=.5), colors = colours)
-ax[0].set_title('Precision')
-ax[0].text(x = 0, y = 0, s = f'{precision*100: .1f}%', ha = 'center')
-
-ax[1].pie(([1 - recall, recall]), startangle=90, wedgeprops=dict(width=.5), colors = colours)
-ax[1].set_title('Recall')
-ax[1].text(x = 0, y = 0, s = f'{recall*100: .1f}%', ha = 'center')
-
-st.pyplot(fig)
-
-st.slider(label = "Choose threshold:", min_value = 0.0, max_value = 1.0, step = 0.01, value = 0.5, key = 'threshold')
-
-# st.write(f'Precision: {precision*100: .2f}%')
-# st.write(f'Recall: {recall*100: .2f}%')
+# Slider to control threshold
+st.slider(label = "Choose threshold (%):", min_value = 0, max_value = 100, step = 1, value = 50, key = 'threshold')

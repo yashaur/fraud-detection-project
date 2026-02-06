@@ -1,6 +1,6 @@
 import numpy as np
-from utils.preprocess import load_preprocess
-from utils.lgbm import load_model, predict
+# from utils.data import load_preprocess
+# from utils.model import load_model, predict
 
 def precision_recall(y_probs, y_test, thresh: float = 0.5):
    
@@ -28,17 +28,38 @@ def precision_recall(y_probs, y_test, thresh: float = 0.5):
 
    return precision, recall
 
+
+def precision_recall_array(X, y, model, y_probs):
+
+   # X, y = load_preprocess()
+   # model = load_model()
+   # y_probs = predict(model, X)
+   
+   pr_data = []
+   
+   for threshold in np.linspace(0,1,101):
+
+      precision, recall = precision_recall(y_probs, y, threshold)
+
+      pr_data.append([recall, precision])
+
+   pr_data = np.array(pr_data) * 100
+
+   return pr_data
+
+
 if __name__ == '__main__':
    
-   data_path = 'data/'
-   X, y = load_preprocess(data_path)
-
-   model_path = 'model/lgbm.pkl'
-   model = load_model(model_path)
+   X, y = load_preprocess()
+   model = load_model()
 
    y_probs = predict(model, X)
 
    precision, recall = precision_recall(y_probs, y, thresh = 1)
 
    print(f'Precision: {precision*100:.2f}%\nRecall: {recall*100:.2f}%')
+
+   pr_data = precision_recall_array()
+
+   print(pr_data[:])
 
