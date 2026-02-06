@@ -12,10 +12,10 @@ def load_model():
 
 def predict(model, X):
     start = time.time()
-    y_preds = model.predict_proba(X)[:,1]
+    y_probs = model.predict_proba(X)[:,1]
     duration = time.time() - start
     print(f'Model took {duration:.2f}s to predict')
-    return y_preds
+    return y_probs
 
 
 if __name__ == '__main__':
