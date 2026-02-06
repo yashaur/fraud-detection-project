@@ -1,3 +1,6 @@
 data/X_test.csv
 datasets/amanalisiddiqui/fraud-detection-dataset/versions/1/AIML Dataset.csv
 datasets/amanalisiddiqui/fraud-detection-dataset/1.complete
+*.pyc
+*.DS_Store
+data/y_test.csv
