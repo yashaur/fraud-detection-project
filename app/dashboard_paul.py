@@ -6,7 +6,7 @@ import numpy as np
 import streamlit as st
 import time
 import pickle
-
+import plotly.express as px
 
 
 path_data = os.path.join(os.getcwd(),'datasets')
@@ -71,6 +71,7 @@ with col2:
 
 st.divider()
 
+
 # ----------------------------
 # 4️⃣ Predict Probabilities
 # ----------------------------
@@ -96,3 +97,30 @@ top_fraud = data.sort_values(
 
 st.dataframe(top_fraud)
 
+# Looking at basic stats
+
+stat_data = (
+    df.groupby(['hour_of_day'])['isFraud']
+    .mean()
+    .reset_index()
+   
+)
+
+fig = px.bar(
+    stat_data,
+    x='hour_of_day',
+    y='isFraud',
+    title='Fraud Rate by Hour of Day'
+)
+
+fig.update_layout(
+    title='Fraud Rate by Hour of Day',
+    plot_bgcolor='rgba(0,0,0,0)',
+    paper_bgcolor='rgba(0,0,0,0)',
+    coloraxis_showscale=False
+)
+
+st.markdown(
+    # The Statistics too look for!
+)
+st.plotly_chart(fig, use_container_width=True)
