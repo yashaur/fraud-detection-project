@@ -115,7 +115,7 @@ fig.update_xaxes(showgrid=False)
 fig.update_yaxes(showgrid=False)
 
 st.markdown(
-    '# The Statistics too look for!'
+    '# The Statistics to look for!'
 )
 
 peak_hour = stat_data.loc[
@@ -129,33 +129,38 @@ st.markdown(
 col1, col2 = st.columns(2)    
 
 with col1:
-    st.plotly_chart(fig, use_container_width=True)
+    with st.container(border=True):
+        st.plotly_chart(fig, use_container_width=True)
 
 with col2:
-    top_hours = stat_data.sort_values('isFraud', ascending=False).reset_index(drop=True).head(10)
-    # top_hours = top_hours.rename(columns={'hour_of_day':'Hour of the day',
-    #                           'isFraud':'Fraud Rate (%)'})
-    # top_hours['Fraud Rate (%)'] = (top_hours['Fraud Rate (%)']).round(2)
-    
-    # st.table(top_hours)
+    with st.container(border=True):
+        top_hours = stat_data.sort_values('isFraud', ascending=False).reset_index(drop=True).head(10)
+        # top_hours = top_hours.rename(columns={'hour_of_day':'Hour of the day',
+        #                           'isFraud':'Fraud Rate (%)'})
+        # top_hours['Fraud Rate (%)'] = (top_hours['Fraud Rate (%)']).round(2)
+        
+        # st.table(top_hours)
 
-    st.markdown("##### Top Average Fraud Risk during different hours of the day")
-    st.data_editor(
-    top_hours,
-    column_config={
-        'hour_of_day':'Hour of the day',
-        "isFraud": st.column_config.ProgressColumn(
-            "Fraud Risk (%)",
-            format="%.2f%%",
-            min_value=0,
-            max_value=100,
-        ),
-    },
-    disabled=True
+        st.markdown("##### Top Average Fraud Risk during different hours of the day")
+        st.data_editor(
+        top_hours,
+        column_config={
+            'hour_of_day':'Hour of the day',
+            "isFraud": st.column_config.ProgressColumn(
+                "Fraud Risk (%)",
+                format="%.2f%%",
+                min_value=0,
+                max_value=100,
+            ),
+        },
+        disabled=True
 )
 
 ##############################################
 
+col1, col2 = st.columns(2)
+
+# Segment of the day 
 df['time_segment'] = df['hour_of_day'].apply(
     lambda x: 'Night' if x >= 22 or x <= 5 else 'Day'
 )
@@ -174,7 +179,35 @@ fig2 =  px.bar(
 )
 
 fig2.update_layout(
-    title='Fraud Rate by Hour of Day',
+    title='Fraud Rate by the segment of the Day',
+    plot_bgcolor='rgba(0,0,0,0)',
+    paper_bgcolor='rgba(0,0,0,0)',
+    coloraxis_showscale=False
+)
+# Payment type analysis
+payment_fraud = (
+    df.groupby('type')['isFraud']
+    .mean()
+    .reset_index()
+    .rename(columns={
+        'type': 'Payment Type',
+        'isFraud': 'Fraud Rate'
+    })
+)
+
+payment_fraud['Fraud Rate'] = payment_fraud['Fraud Rate'] * 100
+payment_fraud = payment_fraud.sort_values('Fraud Rate', ascending=False)
+
+
+fig3 = px.bar(
+    payment_fraud,
+    x='Payment Type',
+    y='Fraud Rate',
+    title='Fraud Rate by the type of transaction'
+)
+
+fig3.update_layout(
+    title='Fraud Rate by the type of transaction',
     plot_bgcolor='rgba(0,0,0,0)',
     paper_bgcolor='rgba(0,0,0,0)',
     coloraxis_showscale=False
@@ -182,7 +215,20 @@ fig2.update_layout(
 
 fig2.update_xaxes(showgrid=False)
 fig2.update_yaxes(showgrid=False)
-st.plotly_chart(fig2)
+fig3.update_xaxes(showgrid=False)
+fig3.update_yaxes(showgrid=False)
+
+
+with col1:
+    with st.container(border=True):
+        st.plotly_chart(fig2)
+
+
+with col2:
+    with st.container(border=True):
+        st.plotly_chart(fig3)
+
+
 
 
 if st.checkbox("Show/Hide Top Frauds"):
