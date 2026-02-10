@@ -2,25 +2,32 @@ import pandas as pd
 import numpy as np
 import os
 import time
+import json
 
-def preprocess_input(X: dict):
+def preprocess_input(X, which = 'dict'):
 
     start = time.time()
 
-    X = {k: [X[k]] for k in X}
+    if which == 'dict':
+        X = {k: [X[k]] for k in X}
+        X_df = pd.DataFrame(X)
+    
+    elif which == 'df':
+        X_df = X
 
-    X_df = pd.DataFrame(X).assign(
-                            sin_hour = lambda df: np.sin(df['hour_of_day'].astype('int') * 2 * np.pi / 24),
-                            cos_hour = lambda df: np.cos(df['hour_of_day'].astype('int') * 2 * np.pi / 24)
+
+    X_df = X_df.assign(
+                        sin_hour = lambda df: np.sin(df['hour_of_day'].astype('int') * 2 * np.pi / 24),
+                        cos_hour = lambda df: np.cos(df['hour_of_day'].astype('int') * 2 * np.pi / 24)
                         )
     
     X_df['type'] = X_df['type'].str.upper()
     
     correct_order = [
-                    'type', 'amount', 'oldbalanceOrg', 'newbalanceOrig',
-                    'oldbalanceDest', 'newbalanceDest', 'hour_of_day',
-                    'sin_hour', 'cos_hour'
-                    ]
+                        'type', 'amount', 'oldbalanceOrg', 'newbalanceOrig',
+                        'oldbalanceDest', 'newbalanceDest', 'hour_of_day',
+                        'sin_hour', 'cos_hour'
+                        ]
     
     X_df = X_df[correct_order].astype({
                             'type': 'category',
@@ -80,6 +87,15 @@ def load_preprocess(which: str = 'both'):
         duration()
 
         return y_data
+    
+def load_prediction_samples():
+    start = time.time()
+    with open('data/prediction_samples.json', 'r') as f:
+        samples = json.load(f)
+    dur = time.time() - start
+    print(f'Prediction sample data took {dur:.2f}s to load')
+    return samples
+    
 
 if __name__ == '__main__':
     
@@ -87,12 +103,15 @@ if __name__ == '__main__':
 
     # print(X.head())
 
-    test_input = {
-    'type': 'Transfer', 'amount': 6961359.0, 'hour_of_day': 21, 
-    'oldbalanceOrg': 6961359.0, 'newbalanceOrig': 0.0,
-    'oldbalanceDest': 0.0, 'newbalanceDest': 0.0
-    }
+    # test_input = {
+    # 'type': 'Transfer', 'amount': 6961359.0, 'hour_of_day': 21, 
+    # 'oldbalanceOrg': 6961359.0, 'newbalanceOrig': 0.0,
+    # 'oldbalanceDest': 0.0, 'newbalanceDest': 0.0
+    # }
 
-    output = preprocess_input(test_input)
+    # output = preprocess_input(test_input)
 
-    print(output.dtypes)
+    # print(output.dtypes)
+
+    data = load_prediction_samples()
+    print((data))

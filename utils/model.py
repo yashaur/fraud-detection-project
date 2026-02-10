@@ -23,17 +23,26 @@ def predict(model, X, output = 'prob'):
 if __name__ == '__main__':
 
     import numpy as np
-    from utils.data import load_preprocess
+    from utils.data import load_preprocess, load_prediction_samples, preprocess_input
     import pandas as pd
 
     model = load_model()
 
-    X, y = load_preprocess()
+    X = load_preprocess(which = 'X')
 
     y_preds = pd.DataFrame(predict(model, X))
+    flag = (y_preds[0] > .8)
+    # print(np.sum(y_preds < .5))
+    idx = list(y_preds[flag].index)
 
-    max_prob_idx = np.argmin(y_preds)
+    print(idx)
 
-    sample = X.loc[max_prob_idx]
+    frauds = X.loc[idx].drop(columns = ['sin_hour', 'cos_hour'])
 
-    print(sample.to_dict())
+    print(frauds)
+
+    for row in idx:
+        print(frauds.loc[row].to_dict())
+        
+
+    
