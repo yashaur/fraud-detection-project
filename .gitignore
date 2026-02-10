@@ -3,6 +3,8 @@ datasets/amanalisiddiqui/fraud-detection-dataset/versions/1/AIML Dataset.csv
 datasets/amanalisiddiqui/fraud-detection-dataset/1.complete
 fraud/
 work.ipynb
+datasets/X_test.csv
+datasets/y_test.csv
 datasets_paul/
 *.pyc
 *.DS_Store
