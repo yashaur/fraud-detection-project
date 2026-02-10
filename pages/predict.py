@@ -119,8 +119,8 @@ newbalanceDest.number_input(
 )
 
 
-threshold = st.session_state['threshold'] / 100
-st.warning(f"The threshold is currently set at {threshold*100:.2f}%")
+threshold = st.session_state['threshold']
+st.warning(f"The threshold is currently set at {threshold}%")
 
 st.space('xsmall')
 
@@ -141,13 +141,13 @@ if st.button("Predict", width = 'stretch'):
 
         model = load_model()
 
-        probability = predict(model, X)[0]
+        probability = predict(model, X)[0] * 100
         
         print('~'*40)
 
         prediction = 1 if probability >= threshold else 0
 
         if prediction == 1:
-            st.error(f"‼️ This transaction is fraudulent. Probability: {probability * 100:.2f}%")
+            st.error(f"‼️ This transaction is fraudulent. Probability: {probability:.2f}%")
         else:
-            st.success(f"✅ This transaction is not fraudulent. Probability: {probability * 100:.2f}%")
+            st.success(f"✅ This transaction is not fraudulent. Probability: {probability:.2f}%")
