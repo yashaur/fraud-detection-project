@@ -1,5 +1,5 @@
 import streamlit as st
-from utils.data import load_preprocess
+from utils.data import load_preprocess, load_prediction_samples
 from utils.model import load_model, predict
 from utils.precision_recall import precision_recall_array
 
@@ -13,7 +13,8 @@ def init_session_vars():
                 'Model': False,
                 'Predictions': False,
                 'Recall-Precision Data': False,
-                'Threshold': False
+                'Threshold': False,
+                'Prediction Samples': False
     }
 
     if 'X' not in st.session_state or 'y' not in st.session_state:
@@ -39,6 +40,10 @@ def init_session_vars():
         init_state['Threshold'] = True
         st.session_state['threshold'] = 50
         threshold = st.session_state['threshold']
+
+    if 'pred_samples' not in st.session_state:
+        init_state['Prediction Samples'] = True
+        st.session_state['pred_samples'] = load_prediction_samples()
 
     if any(init_state.values()):
         print('\n')
