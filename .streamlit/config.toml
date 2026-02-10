@@ -1,0 +1,16 @@
+[global]
+disableWidgetStateDuplicationWarning = true
+
+[client]
+showErrorDetails = "none"
+toolbarMode = "viewer"
+
+[theme]
+primaryColor = "#00741f"
+backgroundColor = "#ffffff"
+
+[server]
+runOnSave = true
+
+[ui]
+hideTopBar = true
