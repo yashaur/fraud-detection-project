@@ -15,5 +15,5 @@ for k in field_names:
     st.session_state[k] = st.session_state.get(k, None)
 
 
-pg = st.navigation([st.Page("pages/predict.py"), st.Page("pages/threshold_slider.py"), st.Page("pages/about_us.py")])
+pg = st.navigation([st.Page("pages/dashboard.py") ,st.Page("pages/predict.py"), st.Page("pages/threshold_slider.py"), st.Page("pages/about_us.py")])
 pg.run()
