@@ -1,260 +1,266 @@
-import pandas as pd
-import lightgbm
-import joblib
 import os
 import numpy as np
+import pandas as pd
 import streamlit as st
-import time
-import pickle
 import plotly.express as px
+import shap
+
+from utils.data import load_preprocess
+from utils.model import load_model
 
 
+# --------------------------------------------------
+# Page Config
+# --------------------------------------------------
 st.set_page_config(layout="wide")
+st.title("Fraud Detection Dashboard")
 
 
-path_data = os.path.join(os.getcwd(),'data')
-path_model = os.path.join(os.getcwd(),'model')
-
-
-st.title("Fraud Detection Model")
-
+# --------------------------------------------------
+# Load Data & Model (CACHED)
+# --------------------------------------------------
 @st.cache_data
-def load_data_x():
-    return pd.read_csv(f'{path_data}/X_sample.csv',
-                    dtype = {
-                        'type': 'category',
-                        'amount': 'float',
-                        'oldbalanceOrg': 'float',
-                        'newbalanceOrig': 'float',
-                        'oldbalanceDest': 'float',
-                        'newbalanceDest': 'float',
-                        'hour_of_day': 'int8'
-                    })
+def load_data():
+    X, y = load_preprocess()
+    return X, y
 
-def load_data_y():
-    return pd.read_csv(f'{path_data}/y_sample.csv')
 
 @st.cache_resource
-def load_model():
-    with open(f"{path_model}/lgbm.pkl", "rb") as f:
-        model = pickle.load(f)
-    return model
+def load_model_and_explainer():
+    model = load_model()
+    explainer = shap.TreeExplainer(model)
+    return model, explainer
 
 
-# Loading the data
-X = load_data_x()
-y = load_data_y()
+X, y = load_data()
+model, explainer = load_model_and_explainer()
 
-df = X.join(y)
+df = X.copy()
+df["isFraud"] = y
 
-# Loading the model
-model = load_model()
-
-# Selecting only the features
-data = df.drop(columns='isFraud')
-
-print(data.columns)
-
-data = data.assign(
-                    sin_hour = np.sin(data['hour_of_day'].astype('int') * 2 * np.pi / 24),
-                    cos_hour = np.cos(data['hour_of_day'].astype('int') * 2 * np.pi / 24)
+hour_order = (
+    pd.to_datetime(range(24), format="%H")
+    .strftime("%I %p")
+    .str.lstrip("0")
 )
 
-y_preds = model.predict_proba(data.head())
+df["hour_12"] = pd.to_datetime(
+    df["hour_of_day"], format="%H"
+).dt.strftime("%I %p").str.lstrip("0")
 
-print(y_preds)
+df["hour_12"] = pd.Categorical(
+    df["hour_12"],
+    categories=hour_order,
+    ordered=True
+)
 
-# Display a checkbox with the label 'Show/Hide'
+rename = {
+        'type' : 'Type of Transaction',
+        'amount' : 'Amount',
+        'oldbalanceOrg' : 'Balance Before the Transaction : Origin',
+        'newbalanceOrig' : 'Balance After the Transaction : Origin',
+        'oldbalanceDest' : 'Balance Before the Transaction : Destination',
+        'newbalanceDest' : 'Balance After the Transaction : Destination',
+        'hour_12' : 'Hour of the Day',
+        'hour_of_day' : 'Hour of Day',
+        'fraud_probability' : 'Probability of Fraud'
+    }
 
-st.header("📊 Original Dataset Overview")
 
-st.write("Preview of the uploaded dataset:")
-st.dataframe(df)
-# Naming the fraud column
-TARGET_COL = "isFraud"
+# --------------------------------------------------
+# Top Fraud Alerts Section
+# --------------------------------------------------
+if st.checkbox("Show Top Fraud Alerts"):
 
-col1, col2 = st.columns(2)    
+    df_probs = df.copy()
+
+    # Predict once
+    df_probs["fraud_probability"] = model.predict_proba(X)[:, 1]
+
+    st.header("🔥 Top Fraud Alerts")
+
+    top_fraud = (
+        df_probs
+        .sort_values("fraud_probability", ascending=False)
+        .head(10)
+        .drop(columns=["isFraud", "sin_hour", "cos_hour", "hour_of_day"], errors="ignore")
+        .rename(columns=rename)
+    )
+
+    st.dataframe(top_fraud, use_container_width=True)
+
+
+# --------------------------------------------------
+# Basic Metrics
+# --------------------------------------------------
+col1, col2 = st.columns(2)
 
 with col1:
     st.metric("Total Records", len(df))
 
 with col2:
-    st.metric("Fraud Cases", df["isFraud"].sum())
+    st.metric("Fraud Cases", int(df["isFraud"].sum()))
 
 st.divider()
 
-# Looking at basic stats
 
+# --------------------------------------------------
+# Fraud Rate by Hour
+# --------------------------------------------------
 stat_data = (
-    df.groupby(['hour_of_day'])['isFraud']
+    df.groupby("hour_12")["isFraud"]
     .mean()
     .mul(100)
     .reset_index()
-   
-)
-
-fig = px.bar(
-    stat_data,
-    x='hour_of_day',
-    y='isFraud',
-    title='Fraud Rate by Hour of Day',
-    labels={
-        'hour_of_day': 'Hour of the day',
-        'isFraud':'Fraud rate'
-    },
-    color='isFraud'
-)
-
-fig.update_layout(
-    title='Fraud Rate by Hour of Day',
-    plot_bgcolor='rgba(0,0,0,0)',
-    paper_bgcolor='rgba(0,0,0,0)',
-    coloraxis_showscale=False,
-)
-fig.update_xaxes(showgrid=False)
-fig.update_yaxes(showgrid=False)
-
-st.markdown(
-    '# The Statistics to look for!'
 )
 
 peak_hour = stat_data.loc[
-    stat_data['isFraud'].idxmax(), 'hour_of_day'
+    stat_data["isFraud"].idxmax(), "hour_12"
 ]
 
-st.markdown(
-    f'### 🎭 Peak fraud risk observed at `{peak_hour}:00 hours`'
+st.markdown(f"### 🎭 Peak fraud risk observed at `{peak_hour}`")
+
+fig_hour = px.bar(
+    stat_data,
+    x="hour_12",
+    y="isFraud",
+    labels={"hour_of_day": "Hour", "isFraud": "Fraud Rate (%)"},
+    color="isFraud"
 )
 
-col1, col2 = st.columns(2)    
-
-with col1:
-    with st.container(border=True):
-        st.plotly_chart(fig, use_container_width=True)
-
-with col2:
-    with st.container(border=True):
-        top_hours = stat_data.sort_values('isFraud', ascending=False).reset_index(drop=True).head(10)
-        # top_hours = top_hours.rename(columns={'hour_of_day':'Hour of the day',
-        #                           'isFraud':'Fraud Rate (%)'})
-        # top_hours['Fraud Rate (%)'] = (top_hours['Fraud Rate (%)']).round(2)
-        
-        # st.table(top_hours)
-
-        st.markdown("##### Top Average Fraud Risk during different hours of the day")
-        st.data_editor(
-        top_hours,
-        column_config={
-            'hour_of_day':'Hour of the day',
-            "isFraud": st.column_config.ProgressColumn(
-                "Fraud Risk (%)",
-                format="%.2f%%",
-                min_value=0,
-                max_value=100,
-            ),
-        },
-        disabled=True
-)
-
-##############################################
-
-col1, col2 = st.columns(2)
-
-# Segment of the day 
-df['time_segment'] = df['hour_of_day'].apply(
-    lambda x: 'Night' if x >= 22 or x <= 5 else 'Day'
-)
-night_day = df.groupby('time_segment')['isFraud'].mean().mul(100).reset_index()
-night_day['isFraud'] = night_day['isFraud']*100
-
-fig2 =  px.bar(
-    night_day, 
-    x='time_segment', 
-    y='isFraud',
-    labels={
-        'time_segment': 'Time Segment',
-        'isFraud':'Fraud rate'
-    },
-    color='isFraud'
-)
-
-fig2.update_layout(
-    title='Fraud Rate by the segment of the Day',
-    plot_bgcolor='rgba(0,0,0,0)',
-    paper_bgcolor='rgba(0,0,0,0)',
+fig_hour.update_layout(
+    plot_bgcolor="rgba(0,0,0,0)",
+    paper_bgcolor="rgba(0,0,0,0)",
     coloraxis_showscale=False
 )
-# Payment type analysis
-payment_fraud = (
-    df.groupby('type')['isFraud']
+
+st.plotly_chart(fig_hour, use_container_width=True)
+
+
+# --------------------------------------------------
+# Segment Analysis
+# --------------------------------------------------
+df["time_segment"] = df["hour_of_day"].apply(
+    lambda x: "Night" if x >= 22 or x <= 5 else "Day"
+)
+
+segment_data = (
+    df.groupby("time_segment")["isFraud"]
     .mean()
+    .mul(100)
     .reset_index()
-    .rename(columns={
-        'type': 'Payment Type',
-        'isFraud': 'Fraud Rate'
-    })
 )
 
-payment_fraud['Fraud Rate'] = payment_fraud['Fraud Rate'] * 100
-payment_fraud = payment_fraud.sort_values('Fraud Rate', ascending=False)
+fig_segment = px.bar(
+    segment_data,
+    x="time_segment",
+    y="isFraud",
+    labels={"time_segment": "Segment", "isFraud": "Fraud Rate (%)"},
+    color="isFraud"
+)
+
+st.plotly_chart(fig_segment, use_container_width=True)
 
 
-fig3 = px.bar(
+# --------------------------------------------------
+# Payment Type Analysis
+# --------------------------------------------------
+# Group and compute fraud rate
+payment_fraud = (
+    df.groupby("type", as_index=False)["isFraud"]
+      .mean()
+)
+
+# Convert to percentage and round
+payment_fraud["Fraud Rate (%)"] = (
+    payment_fraud["isFraud"] * 100
+).round(2)
+
+# Drop original column
+payment_fraud.drop(columns="isFraud", inplace=True)
+
+# Rename transaction types
+rename_type = {
+    "TRANSFER": "Transfer",
+    "CASH_OUT": "Cash Out",
+    "CASH_IN": "Cash In",
+    "DEBIT": "Debit",
+    "PAYMENT": "Payment"
+}
+
+payment_fraud["type"] = (
+    payment_fraud["type"]
+        .astype(str)
+        .map(rename_type)
+        .fillna(payment_fraud["type"])
+)
+
+# Sort by fraud rate
+payment_fraud.sort_values(
+    "Fraud Rate (%)",
+    ascending=False,
+    inplace=True
+)
+
+# Plot
+fig_payment = px.bar(
     payment_fraud,
-    x='Payment Type',
-    y='Fraud Rate',
-    title='Fraud Rate by the type of transaction'
+    x="type",
+    y="Fraud Rate (%)",
+    color="Fraud Rate (%)",
+    title="Fraud Rate by Payment Type"
 )
 
-fig3.update_layout(
-    title='Fraud Rate by the type of transaction',
-    plot_bgcolor='rgba(0,0,0,0)',
-    paper_bgcolor='rgba(0,0,0,0)',
-    coloraxis_showscale=False
+fig_payment.update_layout(
+    xaxis_title="Payment Type",
+    yaxis_title="Fraud Rate (%)"
 )
 
-fig2.update_xaxes(showgrid=False)
-fig2.update_yaxes(showgrid=False)
-fig3.update_xaxes(showgrid=False)
-fig3.update_yaxes(showgrid=False)
-
-
-with col1:
-    with st.container(border=True):
-        st.plotly_chart(fig2)
-
-
-with col2:
-    with st.container(border=True):
-        st.plotly_chart(fig3)
+st.plotly_chart(fig_payment, use_container_width=True)
 
 
 
-
-if st.checkbox("Show/Hide Top Frauds"):
-    # ----------------------------
-    # 4️⃣ Predict Probabilities
-    # ----------------------------
-
-    proba = model.predict_proba(data)
-
-    # Add fraud probability column
-    df["predicted_label"] = model.predict(data)
-    df["fraud_probability"] = model.predict_proba(data)[:,1]
-    df["prediction_status"] = df.apply(
-        lambda x: "Correct" if x[TARGET_COL] == x["predicted_label"] else "Wrong",
-        axis=1)
+# --------------------------------------------------
+# Global SHAP Importance
+# --------------------------------------------------
+st.subheader("🧠 Global SHAP Importance")
 
 
-    # ----------------------------
-    # 5️⃣ Show Top Fraud Alerts
-    # ----------------------------
-    st.header("🔥 Top Fraud Alerts")
+@st.cache_data
+def compute_global_shap(_explainer, X_sample):
+    shap_vals = _explainer.shap_values(X_sample)
 
-    top_fraud = df.sort_values(
-        by="fraud_probability",
-        ascending=False
-    ).head(10)
+    # Handle binary classification
+    if isinstance(shap_vals, list):
+        shap_vals = shap_vals[1]
 
-    st.dataframe(top_fraud)
+    importance = np.abs(shap_vals).mean(axis=0)
 
+    shap_df = pd.DataFrame({
+        "feature": X_sample.columns,
+        "importance": importance
+    }).sort_values("importance", ascending=False)
+
+    return shap_df
+
+
+# Compute SHAP
+shap_df = compute_global_shap(explainer, X)
+
+# Remove unwanted engineered features
+shap_df = shap_df[~shap_df["feature"].isin(["cos_hour", "sin_hour"])]
+
+# Rename the features as per standard English columns
+shap_df["feature"] = shap_df["feature"].map(rename).fillna(shap_df["feature"])
+
+# Plot
+fig_shap = px.bar(
+    shap_df.head(15),
+    x="importance",
+    y="feature",
+    orientation="h",
+    color="importance",
+    title="Top Features Driving Fraud Risk"
+)
+
+st.plotly_chart(fig_shap, use_container_width=True)
