@@ -12,7 +12,7 @@ from utils.model import load_model
 # --------------------------------------------------
 # Page Config
 # --------------------------------------------------
-st.set_page_config(layout="wide")
+# st.set_page_config(layout="wide")
 st.title("Fraud Detection Dashboard")
 
 
