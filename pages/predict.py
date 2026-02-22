@@ -1,8 +1,10 @@
 import streamlit as st
 from random import sample
+import shap
+import pandas as pd
 from utils.init import init_session_vars
 from utils.data import preprocess_input
-from utils.model import load_model, predict
+from utils.model import load_model, predict, get_explainer
 
 init_session_vars()
 
@@ -124,7 +126,6 @@ st.warning(f"The threshold is currently set at {threshold}%")
 
 st.space('xsmall')
 
-
 if st.button("Predict", width = 'stretch'):
     
     input = {col: st.session_state[col] for col in field_names}
@@ -145,9 +146,76 @@ if st.button("Predict", width = 'stretch'):
         
         print('~'*40)
 
-        prediction = 1 if probability >= threshold else 0
+        explainer = get_explainer(model)
+
+        # ---- Prediction ----
+        prob = model.predict_proba(X)[0][1] *100
+        prediction = 1 if prob >= threshold else 0
+
+        st.session_state.prediction = prediction
+        st.session_state.probability = probability
+        st.session_state.X_input = X
 
         if prediction == 1:
-            st.error(f"‼️ This transaction is fraudulent. Probability: {probability:.2f}%")
+            st.error(f"‼️ This transaction is fraudulent. Probability: {prob:.2f}%")
         else:
-            st.success(f"✅ This transaction is not fraudulent. Probability: {probability:.2f}%")
+            st.success(f"✅ This transaction is not fraudulent. Probability: {prob:.2f}%")
+
+        with st.expander("🤔 Reason for classification"):
+            ###########################################################
+            # SHAP Values
+            ########################################################
+
+            prediction = st.session_state.prediction
+            probability = st.session_state.probability
+            X = st.session_state.X_input
+            
+            # st.markdown("---")
+
+            if prediction == 1:
+                st.markdown("‼️ Why was this flagged as FRAUD?")
+            else:
+                st.markdown("Why was this classified as NOT FRAUD?")
+
+            # ---- SHAP (Modern API – No Warning) ----
+            shap_values = explainer(X)
+
+            # Extract SHAP values for this single transaction
+            # For binary classification, this already corresponds to the model output
+            shap_values_single = shap_values.values[0]
+
+            # Build dataframe
+            shap_local_df = pd.DataFrame({
+                "feature": X.columns,
+                "shap_value": shap_values_single
+            })
+
+            shap_local_df["abs_value"] = shap_local_df["shap_value"].abs()
+
+            # Sort based on prediction
+            if prediction == 1:
+                # Strongest fraud-driving features first
+                shap_local_df = shap_local_df.sort_values(
+                    "shap_value",
+                    ascending=False
+                )
+            else:
+                # Strongest NOT-fraud-driving features first
+                shap_local_df = shap_local_df.sort_values(
+                    "shap_value",
+                    ascending=True
+                )
+
+            top_feature = shap_local_df.iloc[0]
+            top_feature_name = field_names[top_feature['feature']]
+
+            if prediction == 1:
+                st.info(
+                    f"🔎 The strongest contributor was **{top_feature_name}**, "
+                    f"which significantly increased the fraud risk."
+                )
+            else:
+                st.info(
+                    f"🔎 The strongest contributor was **{top_feature_name}**, "
+                    f"which strongly reduced the fraud risk."
+                )
