@@ -6,7 +6,7 @@ showErrorDetails = "none"
 toolbarMode = "viewer"
 
 [theme]
-primaryColor = "#00741f"
+primaryColor = "#0076bb"
 backgroundColor = "#ffffff"
 layout = "centered"
 

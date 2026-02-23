@@ -6,6 +6,7 @@ from utils.precision_recall import precision_recall, precision_recall_array
 from utils.charts import create_pr_doughnuts, create_pr_chart
 import streamlit as st
 import matplotlib.pyplot as plt
+import plotly.express as px
 
 init_session_vars()
 
@@ -44,10 +45,9 @@ pr_data = st.session_state['pr_data']
 # Creating the precision and recall doughnut charts
 precision, recall = precision_recall(thresh = threshold, y_probs = y_probs, y_test = y)
 doughnuts = create_pr_doughnuts(precision, recall)
-st.pyplot(doughnuts)
+st.plotly_chart(doughnuts, config={'displayModeBar': False})
+# st.pyplot(doughnuts)
 
 # Creating the precision-recall tradeoff plot
 pr_chart = create_pr_chart(pr_data, precision, recall)
-st.pyplot(pr_chart)
-
-# Slider to control threshold
+st.plotly_chart(pr_chart, config={'displayModeBar': False})

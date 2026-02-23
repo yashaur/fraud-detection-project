@@ -23,7 +23,6 @@ def predict(model, X, output = 'prob'):
 def get_explainer(trained_model):
     return shap.TreeExplainer(trained_model)
 
-
 if __name__ == '__main__':
 
     import numpy as np
