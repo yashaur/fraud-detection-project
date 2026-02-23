@@ -15,8 +15,7 @@ def init_session_vars():
                 'Recall-Precision Data': False,
                 'Threshold': False,
                 'Prediction Samples': False,
-                # 'Field Names': False,
-                # 'Input Fields': False
+                'SHAP values': False
     }
 
     if 'X' not in st.session_state or 'y' not in st.session_state:
@@ -47,21 +46,8 @@ def init_session_vars():
         init_state['Prediction Samples'] = True
         st.session_state['pred_samples'] = load_prediction_samples()
 
-    # if 'field_names' not in st.session_state:
-    #     init_state['Field Names'] = True
-    #     st.session_state['field_names'] = {
-    #                     'type': 'Transaction Type', 'amount': 'Amount', 'hour_of_day': 'Hour of Day',
-    #                     'oldbalanceOrg': 'Origin Account (Old Balance)', 'newbalanceOrig': 'Origin Account (New Balance)',
-    #                     'oldbalanceDest': 'Destination Account (Old Balance)', 'newbalanceDest': 'Destination Account (New Balance)'
-    #                     }
-    
-    # field_names = st.session_state['field_names']
-
-    # for k in field_names:
-    #     if k not in st.session_state:
-    #         init_state['Input Fields'] = True
-    #         st.session_state[k] = st.session_state.get(k, None)
-
+    if 'shap' not in st.session_state:
+        pass
 
     if any(init_state.values()):
         print('\n')

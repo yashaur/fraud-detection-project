@@ -1,40 +1,78 @@
 import matplotlib.pyplot as plt
+from plotly.subplots import make_subplots
+import plotly.graph_objects as go
 import numpy as np
-
-if __name__ == '__main__':
-    from utils.precision_recall import precision_recall_array
-
 
 def create_pr_doughnuts(precision, recall):
 
-    fig, ax = plt.subplots(1,2)
+    fig = make_subplots(rows=1, cols=2, specs=[[{"type": "pie"}, {"type": "pie"}]])
 
-    colours = ['lightblue', 'blue']
+    colours = [
+            "#ffffff",
+            "#00619A",
+            ]
 
-    ax[0].pie(([1 - precision, precision]), startangle=90, wedgeprops=dict(width=.5), colors = colours)
-    ax[0].set_title('Precision')
-    ax[0].text(x = 0, y = 0, s = f'{precision*100: .1f}%', ha = 'center')
+    fig.add_trace(go.Pie(
+        values=[1 - precision, precision],
+        hole=0.5,
+        rotation=0,
+        marker=dict(colors=colours),
+        showlegend=False,
+        textinfo='none'
+    ), row=1, col=1)
 
-    ax[1].pie(([1 - recall, recall]), startangle=90, wedgeprops=dict(width=.5), colors = colours)
-    ax[1].set_title('Recall')
-    ax[1].text(x = 0, y = 0, s = f'{recall*100: .1f}%', ha = 'center')
+    fig.add_trace(go.Pie(
+        values=[1 - recall, recall],
+        hole=0.5,
+        rotation=00,
+        marker=dict(colors=colours),
+        showlegend=False,
+        textinfo='none'
+    ), row=1, col=2)
+
+    fig.update_layout(
+        annotations=[
+            dict(text='Precision', x=0.23, y=0.525, showarrow=False, font_size=25, xanchor='center'),
+            dict(text=f'{precision*100:.1f}%', x=0.23, y=0.46, showarrow=False, font_size=18, xanchor='center'),
+            dict(text='Recall',    x=0.78, y=0.525, showarrow=False, font_size=25, xanchor='center'),
+            dict(text=f'{recall*100:.1f}%',    x=0.78, y=0.46, showarrow=False, font_size=18, xanchor='center'),
+        ],
+        margin=dict(l=0, r=0, t=0, b=0)
+    )
+
+    fig.update_traces(hoverinfo = 'none')
 
     return fig
 
 
 def create_pr_chart(pr_data, precision, recall):
 
-    if __name__ == '__main__':
-        pr_data = precision_recall_array()
+    fig = go.Figure()
 
-    fig, ax = plt.subplots(figsize = (10,4))
+    fig.add_trace(go.Scatter(
+        x=pr_data[:, 0],
+        y=pr_data[:, 1],
+        mode='lines',
+        showlegend = False
+    ))
 
-    ax.plot(pr_data[:,0], pr_data[:,1])
-    ax.set_xlabel('Recall (%)')
-    ax.set_ylabel('Precision (%)')
+    fig.add_trace(go.Scatter(
+        x=[recall * 100],
+        y=[precision * 100],
+        mode='markers',
+        marker=dict(color='red', symbol='circle', size=12),
+        showlegend = False
 
-    ax.scatter(recall*100, precision*100, c = 'red', marker='o', s=100)
+    ))
 
+    fig.update_layout(
+        width=1000,
+        height=250,
+        xaxis_title='Recall (%)',
+        yaxis_title='Precision (%)',
+        xaxis_range = [0,105],
+        yaxis_range = [0, 105],
+        margin=dict(l=0, r=0, t=0, b=0),
+        )
+    
     return fig
-
-
