@@ -2,6 +2,7 @@ import streamlit as st
 from utils.data import load_preprocess, load_prediction_samples
 from utils.model import load_model, predict
 from utils.precision_recall import precision_recall_array
+from utils.shap import load_explainer
 
 def init_session_vars():
     
@@ -15,7 +16,7 @@ def init_session_vars():
                 'Recall-Precision Data': False,
                 'Threshold': False,
                 'Prediction Samples': False,
-                'SHAP values': False
+                'SHAP explainer': False
     }
 
     if 'X' not in st.session_state or 'y' not in st.session_state:
@@ -26,7 +27,7 @@ def init_session_vars():
     if 'model' not in st.session_state:
         init_state['Model'] = True
         st.session_state['model'] = load_model()
-        model = st.session_state['model']
+    model = st.session_state['model']
 
     if 'y_probs' not in st.session_state:
         init_state['Predictions'] = True
@@ -46,8 +47,9 @@ def init_session_vars():
         init_state['Prediction Samples'] = True
         st.session_state['pred_samples'] = load_prediction_samples()
 
-    if 'shap' not in st.session_state:
-        pass
+    if 'explainer' not in st.session_state:
+        init_state['SHAP explainer'] = True
+        st.session_state['explainer'] = load_explainer(model)
 
     if any(init_state.values()):
         print('\n')

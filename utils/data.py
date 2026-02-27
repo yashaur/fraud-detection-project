@@ -4,30 +4,38 @@ import os
 import time
 import json
 
-def preprocess_input(X, which = 'dict'):
+def convert_series_to_df(X):
+    X_df = X.to_frame().T
+    return X_df
+
+def preprocess_input(X):
 
     start = time.time()
 
-    if which == 'dict':
+    if type(X) == dict:
         X = {k: [X[k]] for k in X}
         X_df = pd.DataFrame(X)
     
-    elif which == 'df':
+    elif type(X) == pd.DataFrame:
         X_df = X
 
+    elif type(X) == pd.Series:
+        X_df = convert_series_to_df(X)
 
     X_df = X_df.assign(
-                        sin_hour = lambda df: np.sin(df['hour_of_day'].astype('int') * 2 * np.pi / 24),
-                        cos_hour = lambda df: np.cos(df['hour_of_day'].astype('int') * 2 * np.pi / 24)
+                        sin_hour = np.sin(X_df['hour_of_day'].astype('int') * 2 * np.pi / 24),
+                        cos_hour = np.cos(X_df['hour_of_day'].astype('int') * 2 * np.pi / 24)
                         )
     
     X_df['type'] = X_df['type'].str.upper()
+    X_df['type'] = X_df['type'].str.replace(' ', '_')
     
     correct_order = [
                         'type', 'amount', 'oldbalanceOrg', 'newbalanceOrig',
                         'oldbalanceDest', 'newbalanceDest', 'hour_of_day',
                         'sin_hour', 'cos_hour'
                         ]
+    
     
     X_df = X_df[correct_order].astype({
                             'type': 'category',
@@ -40,6 +48,9 @@ def preprocess_input(X, which = 'dict'):
                             'sin_hour': 'float',
                             'cos_hour': 'float'
     })
+
+    categories = ['CASH_IN', 'CASH_OUT', 'DEBIT', 'PAYMENT', 'TRANSFER']
+    X_df['type'] = pd.Categorical(X_df['type'], categories=categories)
 
     return X_df
 

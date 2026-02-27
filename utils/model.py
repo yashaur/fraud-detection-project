@@ -1,7 +1,6 @@
 import joblib
 import lightgbm
 import time
-import shap
 
 def load_model():
     start = time.time()
@@ -19,9 +18,6 @@ def predict(model, X, output = 'prob'):
     duration = time.time() - start
     print(f'Model took {duration:.2f}s to predict')
     return y_preds
-
-def get_explainer(trained_model):
-    return shap.TreeExplainer(trained_model)
 
 if __name__ == '__main__':
 
