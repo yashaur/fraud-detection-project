@@ -3,11 +3,12 @@ import numpy as np
 import pandas as pd
 import streamlit as st
 import plotly.express as px
-import shap
-
+from utils.init import init_session_vars
 from utils.data import load_preprocess
 from utils.model import load_model
+from utils.shap import load_explainer
 
+init_session_vars()
 
 # --------------------------------------------------
 # Page Config
@@ -15,25 +16,9 @@ from utils.model import load_model
 # st.set_page_config(layout="wide")
 st.title("Fraud Detection Dashboard")
 
-
-# --------------------------------------------------
-# Load Data & Model (CACHED)
-# --------------------------------------------------
-@st.cache_data
-def load_data():
-    X, y = load_preprocess()
-    return X, y
-
-
-@st.cache_resource
-def load_model_and_explainer():
-    model = load_model()
-    explainer = shap.TreeExplainer(model)
-    return model, explainer
-
-
-X, y = load_data()
-model, explainer = load_model_and_explainer()
+X, y = st.session_state['X'], st.session_state['y']
+model = st.session_state['model']
+explainer = st.session_state['explainer']
 
 df = X.copy()
 df["isFraud"] = y
