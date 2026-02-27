@@ -8,7 +8,6 @@ toolbarMode = "viewer"
 [theme]
 primaryColor = "#0076bb"
 backgroundColor = "#ffffff"
-layout = "centered"
 
 [server]
 runOnSave = true

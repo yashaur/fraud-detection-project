@@ -5,14 +5,13 @@ from utils.model import load_model, predict
 from utils.precision_recall import precision_recall, precision_recall_array
 from utils.charts import create_pr_doughnuts, create_pr_chart
 import streamlit as st
-import matplotlib.pyplot as plt
-import plotly.express as px
 
 init_session_vars()
 
 ### STREAMLIT PAGE CODE ###
 
 # Title of the page
+st.set_page_config(layout="centered")
 st.title("Threshold Slider")
 
 # Initialising the threshold
