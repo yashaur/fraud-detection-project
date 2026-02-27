@@ -7,11 +7,7 @@ from utils.shap import shap_values
 
 init_session_vars()
 
-field_names = {
-    'type': 'Transaction Type', 'amount': 'Amount', 'hour_of_day': 'Hour of Day',
-    'oldbalanceOrg': 'Origin Account (Old Balance)', 'newbalanceOrig': 'Origin Account (New Balance)',
-    'oldbalanceDest': 'Destination Account (Old Balance)', 'newbalanceDest': 'Destination Account (New Balance)'
-}
+field_names = st.session_state['field_names']
 
 types = ['Cash Out', 'Cash In', 'Transfer','Payment', 'Debit']
 

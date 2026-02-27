@@ -106,11 +106,75 @@ def load_prediction_samples():
     dur = time.time() - start
     print(f'Prediction sample data took {dur:.2f}s to load')
     return samples
+
+def top_fraud_alerts(X, threshold, model):
+
+    hours =  (
+        pd.to_datetime(range(24), format="%H")
+        .strftime("%I%p")
+        .str.strip("0")
+        )
+    
+    hours_range = hours + ' - ' + np.roll(hours, -1)
+
+    hours_mapping = {hour: hour_range for hour, hour_range in zip(hours, hours_range)}
+
+    X_df = X.copy()
+
+    X_df["hour_12"] = (
+                    pd.to_datetime(
+                        X_df["hour_of_day"],
+                        format="%H")
+                        .dt.strftime("%I%p")
+                        .str.lstrip("0")
+                        .replace(hours_mapping)
+                    )
+    
+    X_df['hour_12'] = pd.Categorical(
+                                X_df['hour_12'],
+                                categories = hours_range,
+                                ordered = True
+    )
+
+    categories = ['CASH_IN', 'CASH_OUT', 'DEBIT', 'PAYMENT', 'TRANSFER']
+    
+    X_df['type'] = pd.Categorical(X_df['type'], categories=categories)
+
+
+    y_probs = model.predict_proba(X_df.drop(columns = 'hour_12'))[:,1]
+
+    X_df['type'] = X_df['type'].str.replace('_', ' ').str.title()
+    
+    X_df['fraud_probability'] = y_probs * 100
+    
+    fraud_index = y_probs >= threshold
+
+    X_df = (
+            X_df[fraud_index]
+            .drop(
+                columns = ['hour_of_day', 'sin_hour', 'cos_hour'])
+            .sort_values(
+                by = 'fraud_probability',
+                ascending = False)
+            .reset_index(drop=True)
+        )
+    
+    X_df['fraud_probability'] = np.round(X_df['fraud_probability'], 2)
+    
+    return X_df
+
     
 
 if __name__ == '__main__':
+
+    from utils.model import load_model
     
-    # X, y = load_preprocess()
+    X, y = load_preprocess()
+    model = load_model()
+
+    df = top_fraud_alerts(X,.5, model)
+
+    print(df)
 
     # print(X.head())
 
@@ -123,6 +187,3 @@ if __name__ == '__main__':
     # output = preprocess_input(test_input)
 
     # print(output.dtypes)
-
-    data = load_prediction_samples()
-    print((data))

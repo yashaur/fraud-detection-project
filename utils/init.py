@@ -10,19 +10,29 @@ def init_session_vars():
         return
     
     init_state ={
+                'Field Names': False,
                 'Data': False,
                 'Model': False,
                 'Predictions': False,
                 'Recall-Precision Data': False,
                 'Threshold': False,
                 'Prediction Samples': False,
-                'SHAP explainer': False
+                'SHAP Explainer': False,
+                'Fraud Alerts Data': False
     }
+
+    if 'field_names' not in st.session_state:
+        init_state['Field Names'] = True
+        st.session_state['field_names'] = {
+            'type': 'Transaction Type', 'amount': 'Amount', 'hour_of_day': 'Hour of Day',
+            'oldbalanceOrg': 'Origin Account (Old Balance)', 'newbalanceOrig': 'Origin Account (New Balance)',
+            'oldbalanceDest': 'Destination Account (Old Balance)', 'newbalanceDest': 'Destination Account (New Balance)'
+            }
 
     if 'X' not in st.session_state or 'y' not in st.session_state:
         init_state['Data'] = True
         st.session_state['X'], st.session_state['y'] = load_preprocess()
-        X, y = st.session_state['X'], st.session_state['y']
+    X, y = st.session_state['X'], st.session_state['y']
 
     if 'model' not in st.session_state:
         init_state['Model'] = True
@@ -48,7 +58,7 @@ def init_session_vars():
         st.session_state['pred_samples'] = load_prediction_samples()
 
     if 'explainer' not in st.session_state:
-        init_state['SHAP explainer'] = True
+        init_state['SHAP Explainer'] = True
         st.session_state['explainer'] = load_explainer(model)
 
     if any(init_state.values()):
