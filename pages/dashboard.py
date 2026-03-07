@@ -7,6 +7,7 @@ from utils.init import init_session_vars
 from utils.data import load_preprocess, top_fraud_alerts
 from utils.model import load_model
 from utils.shap import load_explainer
+from utils.charts import create_fraud_by_time_chart
 
 init_session_vars()
 
@@ -16,11 +17,12 @@ init_session_vars()
 st.set_page_config(layout="wide")
 st.title("Fraud Detection Dashboard")
 
-X, y = st.session_state['X'], st.session_state['y']
+X, y = st.session_state['X'].copy(), st.session_state['y'].copy()
+transactions_per_hour = st.session_state['transactions_per_hour']
 model = st.session_state['model']
 explainer = st.session_state['explainer']
 threshold = st.session_state['threshold'] / 100
-field_names = st.session_state['field_names']
+field_names = st.session_state['field_names'].copy()
 field_names['hour_12'] = 'Time'
 field_names['fraud_probability'] = 'Probability of Fraud (%)'
 
@@ -32,7 +34,7 @@ top_fraud_alerts_df = top_fraud_alerts_df.rename(columns = field_names)
 # --------------------------------------------------
 st.header("🔥 Top Fraud Alerts")
 st.warning(f"The threshold is currently set at {threshold*100:.2f}%")
-st.dataframe(top_fraud_alerts_df, hide_index = True)
+st.dataframe(top_fraud_alerts_df.drop(columns = ['Hour of Day', 'time_segment']), hide_index = True)
 
 
 # --------------------------------------------------
@@ -52,56 +54,52 @@ st.divider()
 # # --------------------------------------------------
 # # Fraud Rate by Hour
 # # --------------------------------------------------
-fraud_by_time = top_fraud_alerts_df['Time'].value_counts()
+fraud_by_time = top_fraud_alerts_df['Time'].value_counts().sort_index()
+fraud_rate_by_time =  fraud_by_time / transactions_per_hour * 100
+time_chart = create_fraud_by_time_chart(fraud_rate_by_time)
+peak_hour = fraud_rate_by_time.sort_values(ascending = False).index[0]
 
-# st.markdown(f"### 🎭 Peak fraud risk observed at `{peak_hour}`")
+st.markdown(f"### 🎭 Peak fraud risk observed from `{peak_hour}`")
+st.plotly_chart(time_chart, config={"displayModeBar": False})
 
-# fig_hour = px.bar(
-#     stat_data,
-#     x="hour_12",
-#     y="isFraud",
-#     labels={"hour_of_day": "Hour", "isFraud": "Fraud Rate (%)"},
-#     color="isFraud"
-# )
-
-# fig_hour.update_layout(
-#     plot_bgcolor="rgba(0,0,0,0)",
-#     paper_bgcolor="rgba(0,0,0,0)",
-#     coloraxis_showscale=False
-# )
 
 # # --------------------------------------------------
 # # Segment Analysis
 # # --------------------------------------------------
-# df["time_segment"] = df["hour_of_day"].apply(
-#     lambda x: "Night" if x >= 22 or x <= 5 else "Day"
-# )
 
-# segment_data = (
-#     df.groupby("time_segment")["isFraud"]
-#     .mean()
-#     .mul(100)
-#     .reset_index()
-# )
+X["time_segment"] = X["hour_of_day"].apply(
+    lambda x: "Night" if x >= 22 or x <= 5 else "Day"
+)
 
-# fig_segment = px.bar(
-#     segment_data,
-#     x="time_segment",
-#     y="isFraud",
-#     labels={"time_segment": "Segment", "isFraud": "Fraud Rate (%)"},
-#     color="isFraud"
-# )
+total_trans_by_segment = (
+    X.groupby("time_segment")['type']
+    .count()
+)
+
+fraud_trans_by_segment = (
+    top_fraud_alerts_df.groupby("time_segment")['Time']
+    .count()
+)
+
+fraud_rate_by_segment = fraud_trans_by_segment / total_trans_by_segment * 10000
+
+st.write(fraud_rate_by_segment)
+
+fig_segment = px.bar(
+    x=fraud_rate_by_segment.index,
+    y=fraud_rate_by_segment.values,
+    # labels={"time_segment": "Segment", "isFraud": "Fraud Rate (%)"},
+    # color="isFraud"
+)
 
 
 
-# plot1, plot2 = st.columns(2)
+plot1, plot2 = st.columns(2)
 
-# with plot1:
-#     st.plotly_chart(fig_hour)
-st.write(fraud_by_time.to_dict())
-st.plotly_chart(fraud_by_time.to_dict())
-# with plot2:
-#     st.plotly_chart(fig_segment)
+with plot1:
+    st.plotly_chart(fig_segment)
+with plot2:
+    st.plotly_chart(fig_segment)
 
 
 # # --------------------------------------------------

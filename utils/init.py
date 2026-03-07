@@ -1,5 +1,5 @@
 import streamlit as st
-from utils.data import load_preprocess, load_prediction_samples
+from utils.data import load_preprocess, load_prediction_samples, transactions_per_hour
 from utils.model import load_model, predict
 from utils.precision_recall import precision_recall_array
 from utils.shap import load_explainer
@@ -12,6 +12,7 @@ def init_session_vars():
     init_state ={
                 'Field Names': False,
                 'Data': False,
+                'Transactions per Hour': False,
                 'Model': False,
                 'Predictions': False,
                 'Recall-Precision Data': False,
@@ -33,6 +34,10 @@ def init_session_vars():
         init_state['Data'] = True
         st.session_state['X'], st.session_state['y'] = load_preprocess()
     X, y = st.session_state['X'], st.session_state['y']
+
+    if 'transactions_per_hour' not in st.session_state:
+        init_state['Transactions per Hour'] = True
+        st.session_state['transactions_per_hour'] = transactions_per_hour(X)
 
     if 'model' not in st.session_state:
         init_state['Model'] = True

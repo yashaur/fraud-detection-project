@@ -75,3 +75,41 @@ def create_pr_chart(pr_data, precision, recall):
         )
     
     return fig
+
+
+
+def create_fraud_by_time_chart(stat_data):
+    x = stat_data.index
+    y = stat_data.values
+    text = [str(np.round(val, 2)) + '%' for val in y]
+    y_upper_limit = max(y) + 5
+
+    fig_hour = go.Figure(
+        data=[
+            go.Bar(
+                x = x,
+                y = y,
+                marker=dict(
+                    color=stat_data.values,
+                    colorscale="Blues",
+                    showscale=False,
+                ),
+                text = text,
+                textposition="outside",
+            )
+        ]
+    )
+
+    fig_hour.update_layout(
+        xaxis_title="Hour",
+        yaxis_title="Fraud Rate (%)",
+        plot_bgcolor="rgba(0,0,0,0)",
+        paper_bgcolor="rgba(0,0,0,0)",
+        yaxis=dict(range=[0, y_upper_limit]),
+        margin=dict(l=20, r=20, t=20, b=20)
+    )
+
+    fig_hour.update_traces(hoverinfo = 'none')
+
+    return fig_hour
+
