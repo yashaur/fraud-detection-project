@@ -1,26 +1,47 @@
 import shap
 import pandas as pd
+import numpy as np
 import time
 
 def load_explainer(model):
     return shap.TreeExplainer(model)
 
-def shap_values(explainer, X):
+def shap_values(explainer, X, top_bottom = True, make_df = False):
     start = time.time()
 
-    shap_values = list(zip(X.columns, explainer(X).values[0]))
-    shap_values.sort(key = lambda val: val[1])
+    single_input = (X.shape[0] == 1)
+    
+    if single_input:
+        shap_values = list(zip(X.columns, explainer(X).values[0]))
+        
+    else:
+        shap_values = explainer(X).values
+        shap_values = np.mean(np.abs(shap_values), axis = 0)
+        shap_values = list(zip(X.columns, shap_values))
+    
+    shap_values.sort(key = lambda val: val[1], reverse = True)
     shap_values = [(feature, shap) for feature, shap in shap_values if feature not in ['sin_hour', 'cos_hour']]
-    shap_top, shap_bottom = shap_values[0][0], shap_values[-1][0]
+
+    if top_bottom:
+        shap_top, shap_bottom = shap_values[0][0], shap_values[-1][0]
+
 
     if __name__ == '__main__':
-        for feature, shap in shap_values:
-            print(f'{feature}: {shap:.2f}')
+        if single_input:
+            for feature, shap in shap_values:
+                print(f'{feature}: {shap:.2f}')
 
     duration = time.time() - start
     print(f'Explainer took {duration:.2f}s to produce SHAP values')
 
-    return shap_top, shap_bottom
+    if top_bottom:
+        return shap_top, shap_bottom
+    else:
+        if make_df:
+            shap_values_df = pd.DataFrame({col: [val] for col, val in shap_values})
+            return shap_values_df
+        else:
+            return shap_values
 
 
 if __name__ == '__main__':
@@ -39,5 +60,8 @@ if __name__ == '__main__':
     # print(input)
 
     explainer = load_explainer(model)
-    shap_vals = shap_values(explainer, input)
+    shap_vals = shap_values(explainer, X, top_bottom=False, make_df = True)
     print(shap_vals)
+    print(shap_vals.shape)
+    print(type(shap_vals))
+    # print(X.loc[0])

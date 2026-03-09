@@ -182,9 +182,14 @@ def transactions_per_hour(X):
 
     X_df = X.copy()
 
+    if 'hour_of_day' in X_df.columns:
+        col = 'hour_of_day'
+    else:
+        col = 'Hour of Day'
+
     X_df["hour_12"] = (
                     pd.to_datetime(
-                        X_df["hour_of_day"],
+                        X_df[col],
                         format="%H")
                         .dt.strftime("%I%p")
                         .str.lstrip("0")
@@ -198,6 +203,48 @@ def transactions_per_hour(X):
     )
 
     return X_df['hour_12'].value_counts().sort_index()
+
+
+def transactions_per_segment(X):
+
+    X_df = X.copy()
+
+    if 'time_segment' not in X_df.columns:
+        col = 'type'
+        X_df["time_segment"] = X_df["hour_of_day"].apply(
+        lambda x: "Night" if x >= 21 or x < 5 else "Day"
+        )
+
+    else:
+        col = 'Time'
+
+    trans_by_segment = (
+                                    X_df
+                                    .groupby("time_segment")[col]
+                                    .count()
+                        )
+    
+    return trans_by_segment
+
+
+def transactions_per_type(X):
+
+    X_df = X.copy()
+
+    if 'type' in X_df.columns:
+        col = 'type'
+    elif 'Transaction Type' in X_df.columns:
+        col = 'Transaction Type'
+
+    trans_by_type = (
+                                    X_df
+                                    .groupby(col)[col]
+                                    .count()
+                        )
+    try:
+        trans_by_type.index = trans_by_type.index.str.replace('_', ' ').str.title()
+    finally:
+        return trans_by_type
     
 
 if __name__ == '__main__':

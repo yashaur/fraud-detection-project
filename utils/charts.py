@@ -1,6 +1,7 @@
 from plotly.subplots import make_subplots
 import plotly.graph_objects as go
 import numpy as np
+import streamlit as st
 
 def create_pr_doughnuts(precision, recall):
 
@@ -84,6 +85,11 @@ def create_fraud_by_time_chart(stat_data):
     text = [str(np.round(val, 2)) + '%' for val in y]
     y_upper_limit = max(y) + 5
 
+    if all(y == 100):
+        cscale = 'blues'
+    else:
+        cscale = 'rdbu'
+
     fig_hour = go.Figure(
         data=[
             go.Bar(
@@ -91,25 +97,94 @@ def create_fraud_by_time_chart(stat_data):
                 y = y,
                 marker=dict(
                     color=stat_data.values,
-                    colorscale="Blues",
+                    colorscale=cscale,
                     showscale=False,
-                ),
-                text = text,
-                textposition="outside",
+                )
             )
         ]
     )
 
     fig_hour.update_layout(
+        title = 'Fraud Rate (%) by Hour of Day',
         xaxis_title="Hour",
         yaxis_title="Fraud Rate (%)",
         plot_bgcolor="rgba(0,0,0,0)",
         paper_bgcolor="rgba(0,0,0,0)",
-        yaxis=dict(range=[0, y_upper_limit]),
+        # yaxis=dict(range=[0, y_upper_limit]),
         margin=dict(l=20, r=20, t=20, b=20)
     )
 
-    fig_hour.update_traces(hoverinfo = 'none')
-
     return fig_hour
 
+
+def create_segment_type_chart(input_df):
+
+    if all(input_df.values == 1000):
+        cscale = 'blues'
+    else:
+        cscale = 'rdbu'
+
+    fig = go.Figure(
+        data=[
+            go.Bar(
+                x=input_df.index,
+                y=input_df.values,
+                marker=dict(
+                    color = input_df.values,
+                    colorscale= cscale,
+                    showscale=False,
+                ),
+            )
+        ]
+    )
+
+    if len(input_df.index) == 2:
+        x_axis = 'Time Segment'
+    else:
+        x_axis = 'Type of Transaction'
+
+    fig.update_layout(
+        title = '# Fraud transactions per 1000 transactions (Day vs Night)',
+        xaxis_title= x_axis,
+        yaxis_title="# Fraud transactions per 1000 transactions",
+                margin=dict(l=20, r=20, t=20, b=20)
+
+    )
+
+    return fig
+
+
+def create_shap_chart(shap_df):
+
+    features_vals = sorted(zip(shap_df.columns, shap_df.values[0]), key = lambda row: row[1], reverse = False)
+    features = [row[0] for row in features_vals]
+    vals = [row[1] for row in features_vals]
+
+    field_names = st.session_state['field_names'].copy()
+
+    for idx, col in enumerate(features):
+        if col in field_names:
+            features[idx] = field_names[col]
+
+    fig_shap = go.Figure(
+        data=[
+            go.Bar(
+                y=features,
+                x=vals,
+                orientation="h",
+                marker=dict(
+                    color=vals,
+                    colorscale="rdbu",
+                    showscale=False,
+                ),
+            )
+        ]
+    )
+
+    fig_shap.update_layout(
+        title="Top Features Driving Fraud Risk",
+        xaxis_title="Importance (Higher is better)",
+        # yaxis_title="Feature",
+    )
+
+    return fig_shap
