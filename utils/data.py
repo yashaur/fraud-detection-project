@@ -72,7 +72,7 @@ def load_preprocess(which: str = 'both'):
                         }
                         ).assign(
                             sin_hour = lambda df: np.sin(df['hour_of_day'].astype('int') * 2 * np.pi / 24),
-                            cos_hour = lambda df: np.cos(df['hour_of_day'].astype('int') * 2 * np.pi / 24)
+                            cos_hour = lambda df: np.cos(df['hour_of_day'].astype('int') * 2 * np.pi / 24),
                         )
 
     y = lambda: pd.read_csv('data/y_sample.csv')
@@ -106,6 +106,7 @@ def load_prediction_samples():
     dur = time.time() - start
     print(f'Prediction sample data took {dur:.2f}s to load')
     return samples
+
 
 def top_fraud_alerts(X, threshold, model):
 
@@ -152,7 +153,7 @@ def top_fraud_alerts(X, threshold, model):
     X_df = (
             X_df[fraud_index]
             .drop(
-                columns = ['hour_of_day', 'sin_hour', 'cos_hour'])
+                columns = ['sin_hour', 'cos_hour'])
             .sort_values(
                 by = 'fraud_probability',
                 ascending = False)
@@ -160,9 +161,90 @@ def top_fraud_alerts(X, threshold, model):
         )
     
     X_df['fraud_probability'] = np.round(X_df['fraud_probability'], 2)
+
+    X_df["time_segment"] = X_df["hour_of_day"].apply(
+    lambda x: "Night" if x >= 22 or x <= 5 else "Day")
     
     return X_df
 
+
+def transactions_per_hour(X):
+
+    hours =  (
+    pd.to_datetime(range(24), format="%H")
+    .strftime("%I%p")
+    .str.strip("0")
+    )
+    
+    hours_range = hours + ' - ' + np.roll(hours, -1)
+
+    hours_mapping = {hour: hour_range for hour, hour_range in zip(hours, hours_range)}
+
+    X_df = X.copy()
+
+    if 'hour_of_day' in X_df.columns:
+        col = 'hour_of_day'
+    else:
+        col = 'Hour of Day'
+
+    X_df["hour_12"] = (
+                    pd.to_datetime(
+                        X_df[col],
+                        format="%H")
+                        .dt.strftime("%I%p")
+                        .str.lstrip("0")
+                        .replace(hours_mapping)
+                    )
+    
+    X_df['hour_12'] = pd.Categorical(
+                                X_df['hour_12'],
+                                categories = hours_range,
+                                ordered = True
+    )
+
+    return X_df['hour_12'].value_counts().sort_index()
+
+
+def transactions_per_segment(X):
+
+    X_df = X.copy()
+
+    if 'time_segment' not in X_df.columns:
+        col = 'type'
+        X_df["time_segment"] = X_df["hour_of_day"].apply(
+        lambda x: "Night" if x >= 21 or x < 5 else "Day"
+        )
+
+    else:
+        col = 'Time'
+
+    trans_by_segment = (
+                                    X_df
+                                    .groupby("time_segment")[col]
+                                    .count()
+                        )
+    
+    return trans_by_segment
+
+
+def transactions_per_type(X):
+
+    X_df = X.copy()
+
+    if 'type' in X_df.columns:
+        col = 'type'
+    elif 'Transaction Type' in X_df.columns:
+        col = 'Transaction Type'
+
+    trans_by_type = (
+                                    X_df
+                                    .groupby(col)[col]
+                                    .count()
+                        )
+    try:
+        trans_by_type.index = trans_by_type.index.str.replace('_', ' ').str.title()
+    finally:
+        return trans_by_type
     
 
 if __name__ == '__main__':

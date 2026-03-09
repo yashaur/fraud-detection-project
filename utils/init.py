@@ -1,8 +1,14 @@
 import streamlit as st
-from utils.data import load_preprocess, load_prediction_samples
+from utils.data import (
+                        load_preprocess,
+                        load_prediction_samples,
+                        transactions_per_hour,
+                        transactions_per_segment,
+                        transactions_per_type
+                        )
 from utils.model import load_model, predict
 from utils.precision_recall import precision_recall_array
-from utils.shap import load_explainer
+from utils.shap import load_explainer, shap_values
 
 def init_session_vars():
     
@@ -12,6 +18,9 @@ def init_session_vars():
     init_state ={
                 'Field Names': False,
                 'Data': False,
+                'Transactions per Hour': False,
+                'Transactions per Segment': False,
+                'Transactions per Type': False,
                 'Model': False,
                 'Predictions': False,
                 'Recall-Precision Data': False,
@@ -33,6 +42,18 @@ def init_session_vars():
         init_state['Data'] = True
         st.session_state['X'], st.session_state['y'] = load_preprocess()
     X, y = st.session_state['X'], st.session_state['y']
+
+    if 'transactions_per_hour' not in st.session_state:
+        init_state['Transactions per Hour'] = True
+        st.session_state['transactions_per_hour'] = transactions_per_hour(X)
+
+    if 'transactions_per_segment' not in st.session_state:
+        init_state['Transactions per Segment'] = True
+        st.session_state['transactions_per_segment'] = transactions_per_segment(X)
+
+    if 'transactions_per_type' not in st.session_state:
+        init_state['Transactions per Type'] = True
+        st.session_state['transactions_per_type'] = transactions_per_type(X)
 
     if 'model' not in st.session_state:
         init_state['Model'] = True
@@ -60,6 +81,7 @@ def init_session_vars():
     if 'explainer' not in st.session_state:
         init_state['SHAP Explainer'] = True
         st.session_state['explainer'] = load_explainer(model)
+    explainer = st.session_state['explainer']
 
     if any(init_state.values()):
         print('\n')

@@ -7,6 +7,8 @@ from utils.shap import shap_values
 
 init_session_vars()
 
+st.set_page_config(layout="wide")
+
 field_names = st.session_state['field_names']
 
 types = ['Cash Out', 'Cash In', 'Transfer','Payment', 'Debit']
