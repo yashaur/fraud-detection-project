@@ -1,8 +1,4 @@
 import streamlit as st
-import os
-import sys
-
-sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 from utils.init import init_session_vars
 from utils.data import load_preprocess
