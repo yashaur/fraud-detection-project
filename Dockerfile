@@ -2,7 +2,7 @@ FROM python:3.11-slim
 
 WORKDIR /app
 
-COPY requirements.txt
+COPY requirements.txt ./
 RUN pip install --no-cache-dir -r requirements.txt
 
 COPY .streamlit ./.streamlit
@@ -10,7 +10,7 @@ COPY data ./data
 COPY model ./model
 COPY pages ./pages
 COPY utils ./utils
-COPY app.py
+COPY app.py ./
 
 EXPOSE 8501
 
