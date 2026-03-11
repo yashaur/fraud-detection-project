@@ -1,21 +1,24 @@
+import streamlit as st
 import shap
 import pandas as pd
 import numpy as np
 import time
 
-def load_explainer(model):
-    return shap.TreeExplainer(model)
+@st.cache_resource
+def load_explainer(_model):
+    return shap.TreeExplainer(_model)
 
-def shap_values(explainer, X, top_bottom = True, make_df = False):
+@st.cache_data
+def shap_values(_explainer, X, top_bottom = True, make_df = False):
     start = time.time()
 
     single_input = (X.shape[0] == 1)
     
     if single_input:
-        shap_values = list(zip(X.columns, explainer(X).values[0]))
+        shap_values = list(zip(X.columns, _explainer(X).values[0]))
         
     else:
-        shap_values = explainer(X).values
+        shap_values = _explainer(X).values
         shap_values = np.mean(np.abs(shap_values), axis = 0)
         shap_values = list(zip(X.columns, shap_values))
     

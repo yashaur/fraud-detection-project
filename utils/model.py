@@ -1,7 +1,9 @@
+import streamlit as st
 import joblib
 import lightgbm
 import time
 
+@st.cache_resource
 def load_model():
     start = time.time()
     model = joblib.load('model/lgbm.pkl')
@@ -9,12 +11,13 @@ def load_model():
     print(f'Model took {duration:.2f}s to load')
     return model
 
-def predict(model, X, output = 'prob'):
+@st.cache_data
+def predict(_model, X, output = 'prob'):
     start = time.time()
     if output == 'prob':
-        y_preds = model.predict_proba(X)[:,1]
+        y_preds = _model.predict_proba(X)[:,1]
     elif output == 'pred':
-        y_preds = model.predict(X)
+        y_preds = _model.predict(X)
     duration = time.time() - start
     print(f'Model took {duration:.2f}s to predict')
     return y_preds

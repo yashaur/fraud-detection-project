@@ -1,3 +1,4 @@
+import streamlit as st
 import pandas as pd
 import numpy as np
 import os
@@ -8,6 +9,7 @@ def convert_series_to_df(X):
     X_df = X.to_frame().T
     return X_df
 
+@st.cache_data
 def preprocess_input(X):
 
     start = time.time()
@@ -54,7 +56,7 @@ def preprocess_input(X):
 
     return X_df
 
-
+@st.cache_data
 def load_preprocess(which: str = 'both'):
 
     start = time.time()
@@ -99,6 +101,7 @@ def load_preprocess(which: str = 'both'):
 
         return y_data
     
+@st.cache_data
 def load_prediction_samples():
     start = time.time()
     with open('data/prediction_samples.json', 'r') as f:
@@ -107,8 +110,8 @@ def load_prediction_samples():
     print(f'Prediction sample data took {dur:.2f}s to load')
     return samples
 
-
-def top_fraud_alerts(X, threshold, model):
+@st.cache_data
+def top_fraud_alerts(X, threshold, _model):
 
     hours =  (
         pd.to_datetime(range(24), format="%H")
@@ -142,7 +145,7 @@ def top_fraud_alerts(X, threshold, model):
     X_df['type'] = pd.Categorical(X_df['type'], categories=categories)
 
 
-    y_probs = model.predict_proba(X_df.drop(columns = 'hour_12'))[:,1]
+    y_probs = _model.predict_proba(X_df.drop(columns = 'hour_12'))[:,1]
 
     X_df['type'] = X_df['type'].str.replace('_', ' ').str.title()
     
@@ -167,7 +170,7 @@ def top_fraud_alerts(X, threshold, model):
     
     return X_df
 
-
+@st.cache_data
 def transactions_per_hour(X):
 
     hours =  (
@@ -204,7 +207,7 @@ def transactions_per_hour(X):
 
     return X_df['hour_12'].value_counts().sort_index()
 
-
+@st.cache_data
 def transactions_per_segment(X):
 
     X_df = X.copy()
@@ -226,7 +229,7 @@ def transactions_per_segment(X):
     
     return trans_by_segment
 
-
+@st.cache_data
 def transactions_per_type(X):
 
     X_df = X.copy()

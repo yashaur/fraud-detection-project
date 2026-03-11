@@ -2,7 +2,7 @@
 from utils.init import init_session_vars
 from utils.data import load_preprocess
 from utils.model import load_model, predict
-from utils.precision_recall import precision_recall, precision_recall_array
+from utils.precision_recall import precision_recall
 from utils.charts import create_pr_doughnuts, create_pr_chart
 import streamlit as st
 
