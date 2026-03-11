@@ -12,7 +12,7 @@ init_session_vars()
 
 # Title of the page
 st.set_page_config(layout="wide")
-st.title("Threshold Slider")
+st.title("🎛️ Threshold Slider")
 
 # Initialising the threshold
 

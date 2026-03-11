@@ -19,7 +19,7 @@ init_session_vars()
 # Page Config
 # --------------------------------------------------
 st.set_page_config(layout="wide")
-st.title("Fraud Detection Dashboard")
+st.title("📊 Fraud Detection Dashboard")
 
 X, y = st.session_state['X'].copy(), st.session_state['y'].copy()
 transactions_per_hour_df = st.session_state['transactions_per_hour']
@@ -113,12 +113,12 @@ with c2:
 # # --------------------------------------------------
 st.subheader("🧠 Global SHAP Importance")
 
-with st.spinner('Loading SHAP values...'):
+with st.spinner('Loading SHAP values... Please wait for up to a minute without switching pages...'):
     shap_init()
     shap_values_df = st.session_state['shap_values']
+
+    st.write('✅ SHAP Explainer loaded. Scroll below to see how each transaction feature contributed to the prediction model!')
 
     shap_chart = create_shap_chart(shap_values_df)
 
     st.plotly_chart(shap_chart, config = {"displayModeBar": False})
-
-    # st.plotly_chart(fig_shap, use_container_width=True)
