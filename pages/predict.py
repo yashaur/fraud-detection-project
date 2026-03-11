@@ -135,7 +135,7 @@ if st.button("Predict", width = 'stretch'):
         
         print('~' * 16, 'PREDICT', '~' * 15)
         
-        X = preprocess_input(input)
+        X = preprocess_input(input, source = 'app')
         model = load_model()
         probability = predict(model, X)[0] * 100
         

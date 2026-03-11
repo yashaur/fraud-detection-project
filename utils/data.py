@@ -10,7 +10,7 @@ def convert_series_to_df(X):
     return X_df
 
 @st.cache_data
-def preprocess_input(X):
+def preprocess_input(X, source = 'raw'):
 
     start = time.time()
 
@@ -23,6 +23,9 @@ def preprocess_input(X):
 
     elif type(X) == pd.Series:
         X_df = convert_series_to_df(X)
+    
+    if source == 'app':
+        X_df['hour_of_day'] -= 1
 
     X_df = X_df.assign(
                         sin_hour = np.sin(X_df['hour_of_day'].astype('int') * 2 * np.pi / 24),

@@ -30,21 +30,34 @@ if __name__ == '__main__':
 
     model = load_model()
 
-    X = load_preprocess(which = 'X')
+    X = load_prediction_samples()
 
-    y_preds = pd.DataFrame(predict(model, X))
-    flag = (y_preds[0] > .8)
-    # print(np.sum(y_preds < .5))
-    idx = list(y_preds[flag].index)
+    X_df = pd.DataFrame()
+    
+    for row in X:
+        row_preproc = preprocess_input(row)
+        X_df = pd.concat([X_df, row_preproc])
 
-    print(idx)
+    X_df.reset_index(inplace=True, drop = True)
 
-    frauds = X.loc[idx].drop(columns = ['sin_hour', 'cos_hour'])
+    y_preds = np.round(pd.DataFrame(predict(model, X_df)) * 100, 2).rename(columns = {0: 'probability'})
 
-    print(frauds)
+    X_df_with_prob = pd.concat([X_df, y_preds], axis = 1).drop(columns = ['sin_hour', 'cos_hour'])
 
-    for row in idx:
-        print(frauds.loc[row].to_dict())
+    X_df_with_prob.to_csv('data/sample_data_with_probs.csv', index = False, header = True)
+
+    # flag = (y_preds[0] > .8)
+    # # print(np.sum(y_preds < .5))
+    # idx = list(y_preds[flag].index)
+
+    # print(idx)
+
+    # frauds = X.loc[idx].drop(columns = ['sin_hour', 'cos_hour'])
+
+    # print(frauds)
+
+    # for row in idx:
+    #     print(frauds.loc[row].to_dict())
         
 
     
