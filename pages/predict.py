@@ -17,10 +17,10 @@ samples = st.session_state['pred_samples']
 
 ### STREAMLIT PAGE CODE ###
 
-st.title("Predict Fraud 🚨")
+st.title("🚨 Predict Fraud")
 
 # Demo and reset buttons
-with st.container(horizontal=True):
+with st.container(horizontal = True):
 
     if st.button("Cycle Random Demo Values"):
         random_sample = sample(samples, k = 1)

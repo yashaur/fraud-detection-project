@@ -32,10 +32,10 @@ def create_pr_doughnuts(precision, recall):
 
     fig.update_layout(
         annotations=[
-            dict(text='Precision', x=0.23, y=0.525, showarrow=False, font_size=25, xanchor='center'),
-            dict(text=f'{precision*100:.1f}%', x=0.23, y=0.46, showarrow=False, font_size=18, xanchor='center'),
-            dict(text='Recall',    x=0.78, y=0.525, showarrow=False, font_size=25, xanchor='center'),
-            dict(text=f'{recall*100:.1f}%',    x=0.78, y=0.46, showarrow=False, font_size=18, xanchor='center'),
+            dict(text='Precision', x=0.225, y=0.525, showarrow=False, font_size=25, xanchor='center'),
+            dict(text=f'{precision*100:.1f}%', x=0.225, y=0.46, showarrow=False, font_size=18, xanchor='center'),
+            dict(text='Recall',    x=0.775, y=0.525, showarrow=False, font_size=25, xanchor='center'),
+            dict(text=f'{recall*100:.1f}%',    x=0.775, y=0.46, showarrow=False, font_size=18, xanchor='center'),
         ],
         margin=dict(l=0, r=0, t=0, b=0)
     )
@@ -74,6 +74,9 @@ def create_pr_chart(pr_data, precision, recall):
         yaxis_range = [0, 105],
         margin=dict(l=0, r=0, t=0, b=0),
         )
+    
+    fig.update_traces(hoverinfo = 'none')
+
     
     return fig
 
