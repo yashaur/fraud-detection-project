@@ -13,7 +13,7 @@ def shap_init():
 
     if 'shap_values' not in st.session_state:
         shap_values_init = True
-        st.session_state['shap_values'] = shap_values(explainer, X, top_bottom = False, make_df = True)
+        st.session_state['shap_values'] = shap_values(_explainer = explainer, X = X, top_bottom = False, make_df = True)
 
     if shap_values_init:
         print('\n')
