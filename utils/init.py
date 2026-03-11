@@ -63,11 +63,11 @@ def init_session_vars():
     if 'y_probs' not in st.session_state:
         init_state['Predictions'] = True
         st.session_state['y_probs'] = predict(model, X)
-        y_probs = st.session_state['y_probs']
+    y_probs = st.session_state['y_probs']
 
     if 'pr_data' not in st.session_state:
         init_state['Recall-Precision Data'] = True
-        st.session_state['pr_data'] = precision_recall_array(X, y, model, y_probs)
+        st.session_state['pr_data'] = precision_recall_array(X, y, y_probs)
 
     if 'threshold' not in st.session_state:
         init_state['Threshold'] = True

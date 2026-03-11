@@ -1,9 +1,11 @@
+import streamlit as st
 import numpy as np
 
 if __name__ == '__main__':
    from utils.data import load_preprocess
    from utils.model import load_model, predict
 
+@st.cache_data
 def precision_recall(y_probs, y_test, thresh: float = 0.5):
    
    y_preds = np.where(y_probs >= thresh, 1, 0)
@@ -30,14 +32,14 @@ def precision_recall(y_probs, y_test, thresh: float = 0.5):
 
    return precision, recall
 
-
-def precision_recall_array(X, y, model, y_probs):
+@st.cache_data
+def precision_recall_array(X, y, _y_probs):
    
    pr_data = []
    
    for threshold in np.linspace(0,1,101):
 
-      precision, recall = precision_recall(y_probs, y, threshold)
+      precision, recall = precision_recall(_y_probs, y, threshold)
 
       pr_data.append([recall, precision])
 
