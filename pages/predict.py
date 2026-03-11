@@ -151,7 +151,7 @@ if st.button("Predict", width = 'stretch'):
         with st.expander("🤔 Reason for classification"):
 
             explainer = st.session_state['explainer']
-            shap_top, shap_bottom = shap_values(explainer = explainer, X = X)
+            shap_top, shap_bottom = shap_values(_explainer = explainer, X = X)
             shap_top, shap_bottom = field_names[shap_top], field_names[shap_bottom]
             
             if prediction == 1:

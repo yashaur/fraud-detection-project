@@ -10,17 +10,19 @@ def load_explainer(_model):
 
 @st.cache_data
 def shap_values(_explainer, X, top_bottom = True, make_df = False):
+    
+    X_df = X.copy()
     start = time.time()
 
-    single_input = (X.shape[0] == 1)
+    single_input = (X_df.shape[0] == 1)
     
     if single_input:
-        shap_values = list(zip(X.columns, _explainer(X).values[0]))
+        shap_values = list(zip(X_df.columns, _explainer(X_df).values[0]))
         
     else:
-        shap_values = _explainer(X).values
+        shap_values = _explainer(X_df).values
         shap_values = np.mean(np.abs(shap_values), axis = 0)
-        shap_values = list(zip(X.columns, shap_values))
+        shap_values = list(zip(X_df.columns, shap_values))
     
     shap_values.sort(key = lambda val: val[1], reverse = True)
     shap_values = [(feature, shap) for feature, shap in shap_values if feature not in ['sin_hour', 'cos_hour']]
