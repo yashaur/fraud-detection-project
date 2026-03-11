@@ -9,3 +9,4 @@ datasets_paul/
 *.DS_Store
 dashboard_paul copy.py
 notebooks/scratch.ipynb
+data/sample_data_with_probs.csv
