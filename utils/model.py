@@ -42,9 +42,11 @@ if __name__ == '__main__':
 
     y_preds = np.round(pd.DataFrame(predict(model, X_df)) * 100, 2).rename(columns = {0: 'probability'})
 
-    X_df_with_prob = pd.concat([X_df, y_preds], axis = 1).drop(columns = ['sin_hour', 'cos_hour'])
+    print(y_preds)
 
-    X_df_with_prob.to_csv('data/sample_data_with_probs.csv', index = False, header = True)
+    # X_df_with_prob = pd.concat([X_df, y_preds], axis = 1).drop(columns = ['sin_hour', 'cos_hour'])
+
+    # X_df_with_prob.to_csv('data/sample_data_with_probs.csv', index = False, header = True)
 
     # flag = (y_preds[0] > .8)
     # # print(np.sum(y_preds < .5))
